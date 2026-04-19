@@ -1,7 +1,3 @@
-function openSite() {
-  chrome.tabs.create({ url: "http://localhost:3000/metrics" });
-}
-
 async function getDataFromChatbot() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
