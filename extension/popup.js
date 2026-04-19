@@ -1,36 +1,67 @@
-// Check if localhost is available
 function isLocalhostAvailable() {
-    // TODO: Implement actual localhost check
-    return false;
+  return true;
 }
 
-// Open the site (localhost if available, otherwise static site)
 function openSite() {
-    const url = isLocalhostAvailable() ? 'http://localhost:3000' : chrome.runtime.getURL('site.html');
-    chrome.tabs.create({ url: url });
+  const url = isLocalhostAvailable()
+    ? "http://localhost:3000/metrics"
+    : chrome.runtime.getURL("site.html");
+  chrome.tabs.create({ url });
 }
 
-// Request data from the currently active AI chatbot site
 async function getDataFromChatbot() {
-    try {
-        // Get the currently active tab
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        
-        // Only proceed if on a supported AI site
-        const supportedSites = ['chatgpt.com', 'chat.openai.com', 'gemini.google.com', 'claude.ai'];
-        const isSupported = supportedSites.some(site => tab.url.includes(site));
-        
-        if (!isSupported) {
-            console.log('Not on a supported AI chatbot site');
-            return null;
-        }
-        
-        // Send message to content script
-        const response = await chrome.tabs.sendMessage(tab.id, { action: 'getData' });
-        return response.data;
-    } catch (error) {
-        console.error('Error getting data from chatbot:', error);
-        return null;
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || !tab.url) {
+      return null;
     }
+
+    const supportedSites = [
+      "chatgpt.com",
+      "chat.openai.com",
+      "gemini.google.com",
+      "claude.ai",
+    ];
+    const isSupported = supportedSites.some((site) => tab.url.includes(site));
+
+    if (!isSupported) {
+      console.log("Not on a supported AI chatbot site");
+      return null;
+    }
+
+    const response = await chrome.tabs.sendMessage(tab.id, { action: "getData" });
+    return response?.data ?? null;
+  } catch (error) {
+    console.error("Error getting data from chatbot:", error);
+    return null;
+  }
 }
 
+async function hydratePopup() {
+  const scoreElement = document.getElementById("prompt-score");
+  const tagsElement = document.getElementById("prompt-tags");
+
+  if (!scoreElement || !tagsElement) {
+    return;
+  }
+
+  const result = await getDataFromChatbot();
+
+  if (!result) {
+    scoreElement.textContent = "--";
+    tagsElement.textContent =
+      "Open a supported chatbot tab to see prompt feedback.";
+    return;
+  }
+
+  scoreElement.textContent =
+    typeof result.final_score === "number" ? result.final_score.toFixed(2) : "--";
+
+  if (Array.isArray(result.tags) && result.tags.length > 0) {
+    tagsElement.textContent = result.tags.join(" | ");
+  } else {
+    tagsElement.textContent = "No tags returned yet.";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", hydratePopup);

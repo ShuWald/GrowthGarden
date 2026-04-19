@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { PlantDisplay } from "@/components/PlantDisplay";
@@ -63,6 +64,14 @@ export function GardenDashboard({ plants }: GardenDashboardProps) {
                 image local so swapping assets is a simple content task instead
                 of a component refactor.
               </p>
+              <div className="mt-6">
+                <Link
+                  href="/metrics"
+                  className="inline-flex rounded-full border border-border bg-surface-strong px-5 py-3 text-sm font-medium text-foreground hover:border-moss/60 hover:bg-white"
+                >
+                  View User Metrics
+                </Link>
+              </div>
             </div>
 
             <div className="grid gap-3 text-sm text-foreground/76 sm:grid-cols-3 lg:grid-cols-1">
