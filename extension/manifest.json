@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Growth Garden",
+  "version": "1.0",
+  "description": "Grow your garden with sustainable AI practices.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  }
+}
