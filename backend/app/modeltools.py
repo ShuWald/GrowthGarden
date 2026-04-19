@@ -104,20 +104,48 @@ def build_score_message(model_input: ModelInput) -> str:
 
 def _extract_json_object(raw_output: str) -> dict:
     if not raw_output.strip():
+        log_message("Model output was empty", additional_route="model")
         return {}
 
+    log_message(
+        f"Parsing model output preview={_preview_text(raw_output)}",
+        additional_route="model",
+    )
+
     try:
-        return json.loads(raw_output)
+        parsed = json.loads(raw_output)
+        log_message("Parsed model output as direct JSON", additional_route="model")
+        return parsed
     except json.JSONDecodeError:
-        match = re.search(r"\{.*\}", raw_output, re.DOTALL)
-        if not match:
+        sanitized = _sanitize_to_json_braces(raw_output)
+        if not sanitized:
             log_message("Failed to find JSON in model output", additional_route="model")
             return {}
+
+        log_message(
+            f"Sanitized JSON candidate preview={_preview_text(sanitized)}",
+            additional_route="model",
+        )
+
         try:
-            return json.loads(match.group(0))
+            parsed = json.loads(sanitized)
+            log_message("Parsed model output after brace sanitization", additional_route="model")
+            return parsed
         except json.JSONDecodeError:
             log_message("Failed to parse model output JSON", additional_route="model")
             return {}
+
+
+def _sanitize_to_json_braces(raw_output: str) -> str:
+    match = re.search(r"\{[\s\S]*\}", raw_output)
+    if not match:
+        return ""
+    return match.group(0).strip()
+
+
+def _preview_text(value: object, limit: int = 400) -> str:
+    text = str(value).replace("\n", "\\n")
+    return text if len(text) <= limit else f"{text[:limit]}..."
 
 
 def _coerce_int(value: object) -> int:

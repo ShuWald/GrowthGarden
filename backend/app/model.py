@@ -47,6 +47,10 @@ class Model:
         try:
             raw_output = self.invoke_model(build_penalty_message(penalty_input))
             log_message("Penalty model response received", additional_route="model")
+            log_message(
+                f"Penalty raw output preview={self._preview_text(raw_output)}",
+                additional_route="model",
+            )
         except ModuleNotFoundError as exc:
             log_message(
                 f"Penalty model unavailable: Ollama client missing ({exc})",
@@ -71,6 +75,10 @@ class Model:
         try:
             raw_output = self.invoke_model(build_score_message(score_input))
             log_message("Score model response received", additional_route="model")
+            log_message(
+                f"Score raw output preview={self._preview_text(raw_output)}",
+                additional_route="model",
+            )
         except ModuleNotFoundError as exc:
             log_message(
                 f"Score model unavailable: Ollama client missing ({exc})",
@@ -111,3 +119,7 @@ class Model:
             return raw_response
 
         return str(response)
+
+    def _preview_text(self, value: object, limit: int = 400) -> str:
+        text = str(value).replace("\n", "\\n")
+        return text if len(text) <= limit else f"{text[:limit]}..."
