@@ -23,16 +23,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 async function submitPromptToBackend(payload) {
-  const response = await fetch(`${BACKEND_URL}/api/prompts`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  let response;
+
+  try {
+    response = await fetch(`${BACKEND_URL}/api/prompts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    throw new Error(
+      `Unable to reach backend at ${BACKEND_URL}: ${error instanceof Error ? error.message : "unknown fetch error"}`,
+    );
+  }
 
   if (!response.ok) {
-    throw new Error(`Backend returned ${response.status}`);
+    let detail = "";
+
+    try {
+      const body = await response.json();
+      detail = typeof body.detail === "string" ? body.detail : "";
+    } catch {
+      detail = await response.text();
+    }
+
+    throw new Error(
+      detail
+        ? `Backend returned ${response.status}: ${detail}`
+        : `Backend returned ${response.status}`,
+    );
   }
 
   const result = await response.json();

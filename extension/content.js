@@ -107,13 +107,13 @@ async function submitPrompt(prompt) {
 
     renderIndicator({
       final_score: null,
-      tags: ["backend-error"],
+      tags: [response?.error ?? "backend-error"],
     });
   } catch (error) {
     console.error("Error sending prompt to backend:", error);
     renderIndicator({
       final_score: null,
-      tags: ["connection-error"],
+      tags: [error instanceof Error ? error.message : "connection-error"],
     });
   }
 }

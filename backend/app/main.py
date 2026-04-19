@@ -45,6 +45,12 @@ async def process_prompt(request: Request):
     except ValueError as exc:
         log_message(f"Invalid prompt payload: {exc}", additional_route="prompts")
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        log_message(
+            f"Unexpected prompt processing failure: {type(exc).__name__}: {exc}",
+            additional_route="prompts",
+        )
+        raise HTTPException(status_code=500, detail="Prompt processing failed") from exc
 
     log_message("Finished processing prompt", print_log=True, additional_route="prompts")
     return summarize_prompt_result(result)

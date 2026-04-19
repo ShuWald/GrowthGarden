@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass
+
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError, PartialCredentialsError
 
 from .flexlog import log_message
 
@@ -66,6 +70,31 @@ class PromptPenaltyResponse:
 class PromptScoreResponse:
     scores: dict[str, float]
     raw_output: str = ""
+
+
+DEFAULT_BEDROCK_MODEL_ID = os.getenv(
+    "GROWTH_GARDEN_BEDROCK_MODEL_ID",
+    "arn:aws:bedrock:us-west-2:759967343613:inference-profile/us.anthropic.claude-opus-4-6-v1",
+)
+DEFAULT_BEDROCK_REGION = os.getenv("AWS_REGION", "us-west-2")
+
+
+def invoke_penalty_model(penalty_input: PromptPenaltyInput) -> PromptPenaltyResponse:
+    return _invoke_bedrock_model(
+        penalty_input=penalty_input,
+        score_input=None,
+        parse_response=parse_penalty_output,
+        request_label="penalty",
+    )
+
+
+def invoke_score_model(score_input: PromptScoreInput) -> PromptScoreResponse:
+    return _invoke_bedrock_model(
+        penalty_input=None,
+        score_input=score_input,
+        parse_response=parse_score_output,
+        request_label="score",
+    )
 
 
 def parse_penalty_output(raw_output: str) -> PromptPenaltyResponse:
@@ -132,3 +161,50 @@ def _coerce_float(value: object) -> float:
         return float(value)
     except (TypeError, ValueError):
         return 0.0
+
+
+def _invoke_bedrock_model(
+    penalty_input: PromptPenaltyInput | None,
+    score_input: PromptScoreInput | None,
+    parse_response,
+    request_label: str,
+):
+    model_input = penalty_input or score_input
+    if model_input is None:
+        raise ValueError("model input is required")
+
+    log_message(f"Invoking {request_label} model", additional_route="model")
+
+    try:
+        client = boto3.client("bedrock-runtime", region_name=DEFAULT_BEDROCK_REGION)
+        message = (
+            build_penalty_message(model_input)
+            if request_label == "penalty"
+            else build_score_message(model_input)
+        )
+        response = client.invoke_model(
+            modelId=DEFAULT_BEDROCK_MODEL_ID,
+            body=json.dumps(
+                {
+                    "anthropic_version": "bedrock-2023-05-31",
+                    "max_tokens": 1024,
+                    "messages": [{"role": "user", "content": message}],
+                }
+            ),
+        )
+        raw_body = response["body"].read()
+        raw_output = raw_body.decode("utf-8") if isinstance(raw_body, bytes) else str(raw_body)
+        log_message(f"{request_label.title()} model response received", additional_route="model")
+        return parse_response(raw_output)
+    except (NoCredentialsError, PartialCredentialsError) as exc:
+        log_message(
+            f"{request_label.title()} model unavailable: missing AWS credentials ({exc})",
+            additional_route="model",
+        )
+    except (ClientError, BotoCoreError, OSError, ValueError) as exc:
+        log_message(
+            f"{request_label.title()} model failed, using fallback response: {type(exc).__name__}: {exc}",
+            additional_route="model",
+        )
+
+    return parse_response("{}")

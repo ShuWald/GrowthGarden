@@ -11,12 +11,19 @@ class PromptProcessor:
     def process(self, raw_data: dict[str, Any]) -> PromptMetricsResult:
         log_message("Starting prompt processing pipeline", additional_route="process")
         prompt_payload = self._extract_prompt(raw_data)
+        log_message(
+            f"Prompt extracted from source={prompt_payload['source']}",
+            additional_route="process",
+        )
         metrics_result = score_model_output(
             user_prompt=prompt_payload["prompt"],
             source=prompt_payload["source"],
             prompt_timestamp=prompt_payload["timestamp"],
         )
-        log_message("Pipeline complete", additional_route="process")
+        log_message(
+            f"Pipeline complete final_score={metrics_result.final_score}",
+            additional_route="process",
+        )
         return metrics_result
 
     def _extract_prompt(self, raw_data: dict[str, Any]) -> dict[str, str]:

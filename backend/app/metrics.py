@@ -59,6 +59,13 @@ def score_model_output(
     model = Model()
     normalized_timestamp = prompt_timestamp or datetime.utcnow().isoformat()
 
+    log_message(
+        f"Scoring prompt source={source} timestamp={normalized_timestamp}",
+        additional_route="metrics",
+    )
+
+    log_message("Invoking penalty model", additional_route="process")
+
     penalty_response = model.invoke_penalty(
         PromptPenaltyInput(
             prompt=user_prompt,
@@ -66,6 +73,8 @@ def score_model_output(
             timestamp=normalized_timestamp,
         )
     )
+
+    log_message("Invoking score model", additional_route="process")
     score_response = model.invoke_score(
         PromptScoreInput(
             prompt=user_prompt,
@@ -76,9 +85,17 @@ def score_model_output(
 
     penalties = penalty_response.penalties
     criteria_scores = score_response.scores
+    log_message(
+        f"Model outputs received penalties={len(penalties)} scores={len(criteria_scores)}",
+        additional_route="metrics",
+    )
     average_score = sum(criteria_scores.values()) / max(len(criteria_scores), 1)
     penalty_total = sum(penalties.values())
     final_score = round(average_score - penalty_total, 2)
+    log_message(
+        f"Computed final_score={final_score} penalty_total={penalty_total}",
+        additional_route="metrics",
+    )
     total_score = update_total_score(
         latest_score=final_score,
         latest_prompt=user_prompt,
@@ -104,6 +121,7 @@ def score_model_output(
 
 
 def append_metrics_row(result: PromptMetricsResult) -> None:
+    log_message("Appending metrics row", additional_route="metrics")
     row = _flatten_metrics_result(result)
     _append_dynamic_csv_row(METRICS_CSV_FILE, row, _base_metrics_headers())
 
@@ -115,6 +133,7 @@ def update_total_score(
 ) -> float:
     ensure_metrics_storage()
     new_total = round(get_total_score() + latest_score, 2)
+    log_message(f"Updating total score to {new_total}", additional_route="metrics")
     row = {
         "updated_at": datetime.utcnow().isoformat(),
         "total_score": str(new_total),
