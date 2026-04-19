@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 from .flexlog import log_message
 from .modeltools import (
@@ -22,6 +21,10 @@ BEDROCK_MODEL_ID = (
 )
 ANTHROPIC_VERSION = "bedrock-2023-05-31"
 MAX_TOKENS = 32000
+JSON_ONLY_SYSTEM_PROMPT = (
+    "You are a scoring service. Reply with exactly one valid JSON object and no "
+    "other text, no markdown, and no code fences."
+)
 
 
 class Model:
@@ -45,6 +48,7 @@ class Model:
                 {
                     "anthropic_version": ANTHROPIC_VERSION,
                     "max_tokens": MAX_TOKENS,
+                    "system": JSON_ONLY_SYSTEM_PROMPT,
                     "messages": [{"role": "user", "content": message}],
                 }
             ),
@@ -52,14 +56,10 @@ class Model:
         result = json.loads(response["body"].read())
         return result["content"][0]["text"]
 
-    def invoke_penalty(
-        self, penalty_input: PromptPenaltyInput
-    ) -> Optional[PromptPenaltyResponse]:
+    def invoke_penalty(self, penalty_input: PromptPenaltyInput) -> PromptPenaltyResponse:
         raw_output = self.invoke_model(build_penalty_message(penalty_input))
         return parse_penalty_output(raw_output)
 
-    def invoke_score(
-        self, score_input: PromptScoreInput
-    ) -> Optional[PromptScoreResponse]:
+    def invoke_score(self, score_input: PromptScoreInput) -> PromptScoreResponse:
         raw_output = self.invoke_model(build_score_message(score_input))
         return parse_score_output(raw_output)

@@ -10,21 +10,32 @@ penalties = {
     "spam": "Does the prompt contain irrelevant or promotional content that detracts from meaningful interactions? Is it overly short, badly structured, or lacking in substance?",
     "personal information": "Does the prompt contain personally identifiable information (PII) or sensitive data that could compromise user privacy or security?",
 }
-model_penalties = (
-    "Deduct penalties of either 0, 1, or 2 points on the user prompt based on "
-    f"the following: {penalties}. Your response should strictly be a JSON object "
-    "with each criteria as a key and the corresponding integer penalty as the value."
-)
 criteria = {
     "insightfulness": "Does the prompt demonstrate deep thinking, novel insights, and/or problem solving on the user end?",
     "context": "Does the prompt provide enough context and information for the model to generate a meaningful response? Is it clear and specific?",
     "responsibility": "Does the prompt adhere to responsible AI usage practices, avoiding harmful, biased, or inappropriate content?",
 }
+
+PENALTY_JSON_SCHEMA = {
+    key: "integer penalty score" for key in penalties.keys()
+}
+SCORE_JSON_SCHEMA = {
+    key: "float quality score" for key in criteria.keys()
+}
+
+model_penalties = (
+    "Evaluate the user prompt for the following penalty categories and return ONLY "
+    "one valid JSON object. Do not include markdown, prose, or code fences. "
+    "Each key must appear exactly once and every value must be an integer. "
+    f"Categories: {penalties}. "
+    f"Required JSON shape: {PENALTY_JSON_SCHEMA}."
+)
 score_prompt = (
-    "Score the following user prompt based on it following given responsible AI "
-    f"usage practices a scale of 0.0 - 5.0: {criteria}. Your response should "
-    "strictly be a JSON object with each criteria as a key and the corresponding "
-    "float score as the value."
+    "Evaluate the user prompt for the following scoring categories and return ONLY "
+    "one valid JSON object. Do not include markdown, prose, or code fences. "
+    "Each key must appear exactly once and every value must be a float. "
+    f"Categories: {criteria}. "
+    f"Required JSON shape: {SCORE_JSON_SCHEMA}."
 )
 
 
@@ -50,17 +61,11 @@ class PromptPenaltyResponse:
     penalties: dict[str, int]
     raw_output: str = ""
 
-    def values(self):
-        return self.penalties.values()
-
 
 @dataclass
 class PromptScoreResponse:
     scores: dict[str, float]
     raw_output: str = ""
-
-    def values(self):
-        return self.scores.values()
 
 
 def parse_penalty_output(raw_output: str) -> PromptPenaltyResponse:

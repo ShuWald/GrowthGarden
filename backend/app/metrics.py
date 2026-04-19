@@ -14,6 +14,9 @@ METRICS_CSV_FILE = LOG_DIR / "metrics.csv"
 TOTAL_SCORE_CSV_FILE = LOG_DIR / "total_score.csv"
 PENALTY_PREFIX = "penalty__"
 SCORE_PREFIX = "score__"
+SCORE_TAG_THRESHOLD = 4.0
+PENALTY_TAG_THRESHOLD = 1
+MAX_RECENT_PROMPTS = 24
 
 
 @dataclass
@@ -34,12 +37,18 @@ class PromptMetricsResult:
 def ensure_metrics_storage() -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     _ensure_csv_headers(METRICS_CSV_FILE, _base_metrics_headers())
-    _ensure_csv_headers(TOTAL_SCORE_CSV_FILE, _total_score_headers(), initial_rows=[{
-        "updated_at": "",
-        "total_score": "0.0",
-        "latest_prompt": "",
-        "latest_prompt_timestamp": "",
-    }])
+    _ensure_csv_headers(
+        TOTAL_SCORE_CSV_FILE,
+        _total_score_headers(),
+        initial_rows=[
+            {
+                "updated_at": "",
+                "total_score": "0.0",
+                "latest_prompt": "",
+                "latest_prompt_timestamp": "",
+            }
+        ],
+    )
 
 
 def score_model_output(
@@ -125,7 +134,10 @@ def get_total_score() -> float:
     try:
         return float(rows[-1].get("total_score", 0.0) or 0.0)
     except ValueError:
-        log_message("Invalid total_score.csv contents detected", additional_route="metrics")
+        log_message(
+            "Invalid total_score.csv contents detected",
+            additional_route="metrics",
+        )
         return 0.0
 
 
@@ -134,35 +146,108 @@ def get_latest_metrics() -> dict[str, Any] | None:
     rows = _read_csv_rows(METRICS_CSV_FILE)
     if not rows:
         return None
+    return _inflate_metrics_row(rows[-1])
 
-    latest = rows[-1]
-    penalties = {
-        key[len(PENALTY_PREFIX):].replace("__", " "): _safe_int(value)
-        for key, value in latest.items()
-        if key.startswith(PENALTY_PREFIX)
+
+def get_frontend_metrics_snapshot() -> dict[str, Any]:
+    latest_metrics = get_latest_metrics()
+    return {
+        "total_score": get_total_score(),
+        "latest_prompt_metrics": latest_metrics,
+        "latest_prompt_analysis": _build_prompt_analysis(latest_metrics)
+        if latest_metrics
+        else None,
     }
-    criteria_scores = {
-        key[len(SCORE_PREFIX):].replace("__", " "): _safe_float(value)
-        for key, value in latest.items()
-        if key.startswith(SCORE_PREFIX)
-    }
+
+
+def get_recent_prompt_analyses(limit: int = 10) -> dict[str, Any]:
+    ensure_metrics_storage()
+    normalized_limit = max(1, min(limit, MAX_RECENT_PROMPTS))
+    rows = _read_csv_rows(METRICS_CSV_FILE)
+    recent_rows = rows[-normalized_limit:]
+    analyses = []
+
+    for row in reversed(recent_rows):
+        metrics = _inflate_metrics_row(row)
+        analyses.append(_build_prompt_analysis(metrics))
 
     return {
-        "prompt": latest.get("prompt", ""),
-        "source": latest.get("source", "unknown"),
-        "prompt_timestamp": latest.get("prompt_timestamp", ""),
-        "recorded_at": latest.get("recorded_at", ""),
-        "final_score": _safe_float(latest.get("final_score")),
-        "total_score": _safe_float(latest.get("total_score")),
+        "count": len(analyses),
+        "limit": normalized_limit,
+        "max_limit": MAX_RECENT_PROMPTS,
+        "prompts": analyses,
+    }
+
+
+def summarize_prompt_result(result: PromptMetricsResult) -> dict[str, Any]:
+    metrics = result.to_dict()
+    analysis = _build_prompt_analysis(metrics)
+    return {
+        "prompt": result.prompt,
+        "final_score": result.final_score,
+        "recorded_at": result.recorded_at,
+        "tags": analysis["tags"],
+        "metrics": {
+            "penalties": result.penalties,
+            "criteria_scores": result.criteria_scores,
+        },
+    }
+
+
+def _build_prompt_analysis(metrics: dict[str, Any]) -> dict[str, Any]:
+    penalties = metrics.get("penalties", {})
+    criteria_scores = metrics.get("criteria_scores", {})
+    tags = compute_prompt_tags(penalties, criteria_scores)
+    return {
+        "prompt": metrics.get("prompt", ""),
+        "source": metrics.get("source", "unknown"),
+        "prompt_timestamp": metrics.get("prompt_timestamp", ""),
+        "recorded_at": metrics.get("recorded_at", ""),
+        "final_score": metrics.get("final_score", 0.0),
+        "total_score": metrics.get("total_score", 0.0),
+        "tags": tags,
         "penalties": penalties,
         "criteria_scores": criteria_scores,
     }
 
 
-def get_frontend_metrics_snapshot() -> dict[str, Any]:
+def compute_prompt_tags(
+    penalties: dict[str, int],
+    criteria_scores: dict[str, float],
+) -> list[str]:
+    tags: list[str] = []
+
+    for category, penalty_value in sorted(penalties.items()):
+        if penalty_value >= PENALTY_TAG_THRESHOLD:
+            tags.append(f"penalty:{category}")
+
+    for category, score_value in sorted(criteria_scores.items()):
+        if score_value >= SCORE_TAG_THRESHOLD:
+            tags.append(f"strength:{category}")
+
+    return tags
+
+
+def _inflate_metrics_row(row: dict[str, str]) -> dict[str, Any]:
+    penalties = {
+        key[len(PENALTY_PREFIX):].replace("__", " "): _safe_int(value)
+        for key, value in row.items()
+        if key.startswith(PENALTY_PREFIX)
+    }
+    criteria_scores = {
+        key[len(SCORE_PREFIX):].replace("__", " "): _safe_float(value)
+        for key, value in row.items()
+        if key.startswith(SCORE_PREFIX)
+    }
     return {
-        "total_score": get_total_score(),
-        "latest_prompt_metrics": get_latest_metrics(),
+        "prompt": row.get("prompt", ""),
+        "source": row.get("source", "unknown"),
+        "prompt_timestamp": row.get("prompt_timestamp", ""),
+        "recorded_at": row.get("recorded_at", ""),
+        "final_score": _safe_float(row.get("final_score")),
+        "total_score": _safe_float(row.get("total_score")),
+        "penalties": penalties,
+        "criteria_scores": criteria_scores,
     }
 
 
@@ -221,9 +306,9 @@ def _ensure_csv_headers(
 ) -> None:
     if path.exists():
         existing_rows = _read_csv_rows(path)
-        existing_headers = existing_rows[0].keys() if existing_rows else headers
-        merged_headers = _merge_headers(list(existing_headers), headers)
-        if merged_headers != list(existing_headers):
+        existing_headers = list(existing_rows[0].keys()) if existing_rows else headers
+        merged_headers = _merge_headers(existing_headers, headers)
+        if merged_headers != existing_headers:
             _rewrite_csv(path, merged_headers, existing_rows)
         return
 

@@ -1,9 +1,14 @@
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from .flexlog import ensure_log_directory, log_message
-from .metrics import ensure_metrics_storage, get_frontend_metrics_snapshot
+from .metrics import (
+    ensure_metrics_storage,
+    get_frontend_metrics_snapshot,
+    get_recent_prompt_analyses,
+    summarize_prompt_result,
+)
 from .process import PromptProcessor
 
 load_dotenv()
@@ -42,7 +47,7 @@ async def process_prompt(request: Request):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     log_message("Finished processing prompt", print_log=True, additional_route="prompts")
-    return result
+    return summarize_prompt_result(result)
 
 
 @app.get("/api/frontend")
@@ -51,7 +56,7 @@ def frontend_metrics():
     return get_frontend_metrics_snapshot()
 
 
-@app.get("/api/test")
-def get_endpoint():
-    log_message("Received GET request at /api/test", print_log=True, additional_route="test")
-    return {"message": "Default response"}
+@app.get("/api/prompts/recent")
+def recent_prompt_metrics(n: int = Query(default=10, ge=1, lt=25)):
+    log_message(f"Serving recent prompt history for n={n}", additional_route="metrics")
+    return get_recent_prompt_analyses(limit=n)

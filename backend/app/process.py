@@ -4,11 +4,11 @@ from datetime import datetime
 from typing import Any
 
 from .flexlog import log_message
-from .metrics import score_model_output
+from .metrics import PromptMetricsResult, score_model_output
 
 
 class PromptProcessor:
-    def process(self, raw_data: dict[str, Any]) -> dict[str, Any]:
+    def process(self, raw_data: dict[str, Any]) -> PromptMetricsResult:
         log_message("Starting prompt processing pipeline", additional_route="process")
         prompt_payload = self._extract_prompt(raw_data)
         metrics_result = score_model_output(
@@ -17,7 +17,7 @@ class PromptProcessor:
             prompt_timestamp=prompt_payload["timestamp"],
         )
         log_message("Pipeline complete", additional_route="process")
-        return metrics_result.to_dict()
+        return metrics_result
 
     def _extract_prompt(self, raw_data: dict[str, Any]) -> dict[str, str]:
         prompt_value = raw_data.get("prompt", "")
