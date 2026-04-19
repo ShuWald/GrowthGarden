@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import importlib
 import json
+import os
 
 from .flexlog import log_message
 from .modeltools import (
@@ -14,52 +16,98 @@ from .modeltools import (
     parse_score_output,
 )
 
-BEDROCK_REGION = "us-west-2"
-BEDROCK_MODEL_ID = (
-    "arn:aws:bedrock:us-west-2:759967343613:inference-profile/"
-    "us.anthropic.claude-opus-4-6-v1"
-)
-ANTHROPIC_VERSION = "bedrock-2023-05-31"
-MAX_TOKENS = 32000
+DEFAULT_OLLAMA_MODEL = os.getenv("GROWTH_GARDEN_OLLAMA_MODEL", "llama3")
 JSON_ONLY_SYSTEM_PROMPT = (
-    "You are a scoring service. Reply with exactly one valid JSON object and no "
-    "other text, no markdown, and no code fences."
+    "Return only valid JSON. Do not include markdown, prose, or code fences. "
+    "Every key must appear exactly once and every value must match the requested type."
 )
 
 
 class Model:
-    """Interface for running Bedrock model inference."""
-
-    def __init__(self) -> None:
-        self._client = None
-
-    def _get_client(self):
-        if self._client is None:
-            import boto3
-
-            self._client = boto3.client("bedrock-runtime", region_name=BEDROCK_REGION)
-        return self._client
+    """Interface for running Ollama model inference."""
 
     def invoke_model(self, message: str) -> str:
-        log_message("Invoking Bedrock model", additional_route="model")
-        response = self._get_client().invoke_model(
-            modelId=BEDROCK_MODEL_ID,
-            body=json.dumps(
-                {
-                    "anthropic_version": ANTHROPIC_VERSION,
-                    "max_tokens": MAX_TOKENS,
-                    "system": JSON_ONLY_SYSTEM_PROMPT,
-                    "messages": [{"role": "user", "content": message}],
-                }
-            ),
+        log_message(
+            f"Invoking model via Ollama ({DEFAULT_OLLAMA_MODEL})",
+            additional_route="model",
         )
-        result = json.loads(response["body"].read())
-        return result["content"][0]["text"]
+        ollama = importlib.import_module("ollama")
+        response = ollama.chat(
+            model=DEFAULT_OLLAMA_MODEL,
+            messages=[
+                {"role": "system", "content": JSON_ONLY_SYSTEM_PROMPT},
+                {"role": "user", "content": message},
+            ],
+            format="json",
+            options={"temperature": 0},
+        )
+        return self._extract_ollama_content(response)
 
     def invoke_penalty(self, penalty_input: PromptPenaltyInput) -> PromptPenaltyResponse:
-        raw_output = self.invoke_model(build_penalty_message(penalty_input))
+        try:
+            raw_output = self.invoke_model(build_penalty_message(penalty_input))
+            log_message("Penalty model response received", additional_route="model")
+        except ModuleNotFoundError as exc:
+            log_message(
+                f"Penalty model unavailable: Ollama client missing ({exc})",
+                additional_route="model",
+            )
+            raw_output = "{}"
+        except (ConnectionError, OSError, ValueError) as exc:
+            log_message(
+                f"Penalty model failed, using fallback response: {type(exc).__name__}: {exc}",
+                additional_route="model",
+            )
+            raw_output = "{}"
+        except Exception as exc:
+            log_message(
+                f"Penalty model failed, using fallback response: {type(exc).__name__}: {exc}",
+                additional_route="model",
+            )
+            raw_output = "{}"
         return parse_penalty_output(raw_output)
 
     def invoke_score(self, score_input: PromptScoreInput) -> PromptScoreResponse:
-        raw_output = self.invoke_model(build_score_message(score_input))
+        try:
+            raw_output = self.invoke_model(build_score_message(score_input))
+            log_message("Score model response received", additional_route="model")
+        except ModuleNotFoundError as exc:
+            log_message(
+                f"Score model unavailable: Ollama client missing ({exc})",
+                additional_route="model",
+            )
+            raw_output = "{}"
+        except (ConnectionError, OSError, ValueError) as exc:
+            log_message(
+                f"Score model failed, using fallback response: {type(exc).__name__}: {exc}",
+                additional_route="model",
+            )
+            raw_output = "{}"
+        except Exception as exc:
+            log_message(
+                f"Score model failed, using fallback response: {type(exc).__name__}: {exc}",
+                additional_route="model",
+            )
+            raw_output = "{}"
         return parse_score_output(raw_output)
+
+    def _extract_ollama_content(self, response: object) -> str:
+        if isinstance(response, dict):
+            message = response.get("message")
+            if isinstance(message, dict):
+                content = message.get("content", "")
+                return content if isinstance(content, str) else str(content)
+            content = response.get("response")
+            if isinstance(content, str):
+                return content
+
+        content = getattr(response, "message", None)
+        if isinstance(content, dict):
+            raw_content = content.get("content", "")
+            return raw_content if isinstance(raw_content, str) else str(raw_content)
+
+        raw_response = getattr(response, "response", None)
+        if isinstance(raw_response, str):
+            return raw_response
+
+        return str(response)

@@ -1,8 +1,3 @@
-[2026-04-19 10:11:22] Growth Garden backend started
-[2026-04-19 10:11:46] Received prompt payload
-[2026-04-19 10:11:46] Starting prompt processing pipeline
-[2026-04-19 10:11:46] Prompt extracted from source=chatgpt.com
-[2026-04-19 10:11:46] Scoring prompt source=chatgpt.com timestamp=2026-04-19T17:11:46.487Z
-[2026-04-19 10:11:46] Invoking penalty model
-[2026-04-19 10:11:46] Invoking Bedrock model
-[2026-04-19 10:11:49] Unexpected prompt processing failure: NoCredentialsError: Unable to locate credentials
+[2026-04-19 10:23:06] Growth Garden backend started
+[2026-04-19 10:23:20] Serving frontend metrics snapshot
+[2026-04-19 10:23:20] Serving recent prompt history for n=8
