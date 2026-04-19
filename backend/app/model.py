@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib
-import json
 import os
 
 from .flexlog import log_message
@@ -105,14 +104,23 @@ class Model:
             if isinstance(message, dict):
                 content = message.get("content", "")
                 return content if isinstance(content, str) else str(content)
-            content = response.get("response")
-            if isinstance(content, str):
-                return content
 
-        content = getattr(response, "message", None)
-        if isinstance(content, dict):
-            raw_content = content.get("content", "")
+            object_content = getattr(message, "content", None)
+            if isinstance(object_content, str):
+                return object_content
+
+            response_content = response.get("response")
+            if isinstance(response_content, str):
+                return response_content
+
+        message_obj = getattr(response, "message", None)
+        if isinstance(message_obj, dict):
+            raw_content = message_obj.get("content", "")
             return raw_content if isinstance(raw_content, str) else str(raw_content)
+
+        object_content = getattr(message_obj, "content", None)
+        if isinstance(object_content, str):
+            return object_content
 
         raw_response = getattr(response, "response", None)
         if isinstance(raw_response, str):
