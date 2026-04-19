@@ -1,67 +1,114 @@
-// Content script that runs on ChatGPT, Gemini, Claude sites
-// Captures user prompts and sends them to the backend
-
-const BACKEND_URL = "http://localhost:8000";
-
-console.log("Growth Garden extension loaded on:", window.location.hostname);
+const SUPPORTED_HOSTS = [
+  "chatgpt.com",
+  "chat.openai.com",
+  "gemini.google.com",
+  "claude.ai",
+];
 
 let lastPrompt = null;
 let indicatorElement = null;
 
-function captureNewPrompts() {
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach(() => {
-      const userMessages = document.querySelectorAll(
-        '[data-message-author-role="user"]',
-      );
-
-      if (userMessages.length > 0) {
-        const lastMessage = userMessages[userMessages.length - 1];
-        const promptText = lastMessage.textContent?.trim();
-
-        if (promptText && promptText !== lastPrompt) {
-          lastPrompt = promptText;
-          sendPromptToBackend(promptText);
-        }
-      }
-    });
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: false,
-  });
+if (SUPPORTED_HOSTS.some((host) => window.location.hostname.includes(host))) {
+  initializePromptCapture();
 }
 
-async function sendPromptToBackend(prompt) {
-  try {
-    const payload = {
-      prompt,
-      source: window.location.hostname,
-      timestamp: new Date().toISOString(),
-    };
+function initializePromptCapture() {
+  document.addEventListener("keydown", handlePromptSubmitKeydown, true);
+  document.addEventListener("click", handlePromptSubmitClick, true);
+}
 
-    const response = await fetch(`${BACKEND_URL}/api/prompts`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+function handlePromptSubmitKeydown(event) {
+  if (event.key !== "Enter" || event.shiftKey) {
+    return;
+  }
+
+  const prompt = readActivePromptInput();
+  if (prompt) {
+    submitPrompt(prompt);
+  }
+}
+
+function handlePromptSubmitClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) {
+    return;
+  }
+
+  const button = target.closest("button");
+  if (!button) {
+    return;
+  }
+
+  const buttonText = button.textContent?.toLowerCase() ?? "";
+  const ariaLabel = button.getAttribute("aria-label")?.toLowerCase() ?? "";
+  const title = button.getAttribute("title")?.toLowerCase() ?? "";
+  const combinedLabel = `${buttonText} ${ariaLabel} ${title}`;
+
+  if (!/(send|submit|up|arrow)/.test(combinedLabel)) {
+    return;
+  }
+
+  const prompt = readActivePromptInput();
+  if (prompt) {
+    submitPrompt(prompt);
+  }
+}
+
+function readActivePromptInput() {
+  const selectors = [
+    "textarea",
+    '[contenteditable="true"]',
+    '[role="textbox"]',
+    "div.ProseMirror",
+  ];
+
+  for (const selector of selectors) {
+    const elements = document.querySelectorAll(selector);
+    for (const element of elements) {
+      const text = extractTextFromElement(element);
+      if (text) {
+        return text;
+      }
+    }
+  }
+
+  return null;
+}
+
+function extractTextFromElement(element) {
+  if (element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement) {
+    return element.value.trim();
+  }
+
+  return element.textContent?.trim() ?? "";
+}
+
+async function submitPrompt(prompt) {
+  if (!prompt || prompt === lastPrompt) {
+    return;
+  }
+
+  lastPrompt = prompt;
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: "submitPrompt",
+      payload: {
+        prompt,
+        source: window.location.hostname,
+        timestamp: new Date().toISOString(),
       },
-      body: JSON.stringify(payload),
     });
 
-    if (response.ok) {
-      const result = await response.json();
-      console.log("Backend response:", result);
-      chrome.storage.local.set({ lastBackendResult: result });
-      renderIndicator(result);
-    } else {
-      console.error("Backend error:", response.status);
-      renderIndicator({
-        final_score: null,
-        tags: ["backend-error"],
-      });
+    if (response?.success) {
+      renderIndicator(response.data);
+      return;
     }
+
+    renderIndicator({
+      final_score: null,
+      tags: ["backend-error"],
+    });
   } catch (error) {
     console.error("Error sending prompt to backend:", error);
     renderIndicator({
@@ -111,7 +158,7 @@ function renderIndicator(result) {
       <div style="width:12px;height:12px;border-radius:999px;background:${getIndicatorColor(result.final_score)};"></div>
     </div>
     <div style="margin-top:8px;font-size:12px;line-height:1.5;color:rgba(36,49,39,0.76);">
-      ${tags.length > 0 ? tags.join(" | ") : "No category tags returned yet"}
+      ${tags.length > 0 ? tags.join(" | ") : "No relevant tags returned yet"}
     </div>
   `;
 }
@@ -127,19 +174,4 @@ function getIndicatorColor(score) {
     return "#d3b26f";
   }
   return "#bf6f5d";
-}
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "getData") {
-    chrome.storage.local.get(["lastBackendResult"], (result) => {
-      sendResponse({ success: true, data: result.lastBackendResult });
-    });
-    return true;
-  }
-});
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", captureNewPrompts);
-} else {
-  captureNewPrompts();
 }
