@@ -1,12 +1,10 @@
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import re
 from dataclasses import dataclass
-
-import boto3
-from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError, PartialCredentialsError
 
 from .flexlog import log_message
 
@@ -42,6 +40,8 @@ score_prompt = (
     f"Required JSON shape: {SCORE_JSON_SCHEMA}."
 )
 
+DEFAULT_OLLAMA_MODEL = os.getenv("GROWTH_GARDEN_OLLAMA_MODEL", "llama3")
+
 
 @dataclass
 class ModelInput:
@@ -70,31 +70,6 @@ class PromptPenaltyResponse:
 class PromptScoreResponse:
     scores: dict[str, float]
     raw_output: str = ""
-
-
-DEFAULT_BEDROCK_MODEL_ID = os.getenv(
-    "GROWTH_GARDEN_BEDROCK_MODEL_ID",
-    "arn:aws:bedrock:us-west-2:759967343613:inference-profile/us.anthropic.claude-opus-4-6-v1",
-)
-DEFAULT_BEDROCK_REGION = os.getenv("AWS_REGION", "us-west-2")
-
-
-def invoke_penalty_model(penalty_input: PromptPenaltyInput) -> PromptPenaltyResponse:
-    return _invoke_bedrock_model(
-        penalty_input=penalty_input,
-        score_input=None,
-        parse_response=parse_penalty_output,
-        request_label="penalty",
-    )
-
-
-def invoke_score_model(score_input: PromptScoreInput) -> PromptScoreResponse:
-    return _invoke_bedrock_model(
-        penalty_input=None,
-        score_input=score_input,
-        parse_response=parse_score_output,
-        request_label="score",
-    )
 
 
 def parse_penalty_output(raw_output: str) -> PromptPenaltyResponse:
@@ -131,6 +106,24 @@ def build_score_message(model_input: ModelInput) -> str:
     )
 
 
+def invoke_penalty_model(penalty_input: PromptPenaltyInput) -> PromptPenaltyResponse:
+    return _invoke_ollama_model(
+        penalty_input=penalty_input,
+        score_input=None,
+        parse_response=parse_penalty_output,
+        request_label="penalty",
+    )
+
+
+def invoke_score_model(score_input: PromptScoreInput) -> PromptScoreResponse:
+    return _invoke_ollama_model(
+        penalty_input=None,
+        score_input=score_input,
+        parse_response=parse_score_output,
+        request_label="score",
+    )
+
+
 def _extract_json_object(raw_output: str) -> dict:
     if not raw_output.strip():
         return {}
@@ -163,7 +156,7 @@ def _coerce_float(value: object) -> float:
         return 0.0
 
 
-def _invoke_bedrock_model(
+def _invoke_ollama_model(
     penalty_input: PromptPenaltyInput | None,
     score_input: PromptScoreInput | None,
     parse_response,
@@ -173,38 +166,75 @@ def _invoke_bedrock_model(
     if model_input is None:
         raise ValueError("model input is required")
 
-    log_message(f"Invoking {request_label} model", additional_route="model")
+    log_message(
+        f"Invoking {request_label} model via Ollama ({DEFAULT_OLLAMA_MODEL})",
+        additional_route="model",
+    )
 
     try:
-        client = boto3.client("bedrock-runtime", region_name=DEFAULT_BEDROCK_REGION)
+        ollama = importlib.import_module("ollama")
         message = (
             build_penalty_message(model_input)
             if request_label == "penalty"
             else build_score_message(model_input)
         )
-        response = client.invoke_model(
-            modelId=DEFAULT_BEDROCK_MODEL_ID,
-            body=json.dumps(
+        response = ollama.chat(
+            model=DEFAULT_OLLAMA_MODEL,
+            messages=[
                 {
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "max_tokens": 1024,
-                    "messages": [{"role": "user", "content": message}],
-                }
-            ),
+                    "role": "system",
+                    "content": (
+                        "Return only valid JSON. Do not include markdown, prose, or code fences. "
+                        "Every key must appear exactly once and every value must match the requested type."
+                    ),
+                },
+                {"role": "user", "content": message},
+            ],
+            format="json",
+            options={"temperature": 0},
         )
-        raw_body = response["body"].read()
-        raw_output = raw_body.decode("utf-8") if isinstance(raw_body, bytes) else str(raw_body)
-        log_message(f"{request_label.title()} model response received", additional_route="model")
-        return parse_response(raw_output)
-    except (NoCredentialsError, PartialCredentialsError) as exc:
+        raw_output = _extract_ollama_content(response)
         log_message(
-            f"{request_label.title()} model unavailable: missing AWS credentials ({exc})",
+            f"{request_label.title()} model response received",
             additional_route="model",
         )
-    except (ClientError, BotoCoreError, OSError, ValueError) as exc:
+        return parse_response(raw_output)
+    except ModuleNotFoundError as exc:
+        log_message(
+            f"{request_label.title()} model unavailable: Ollama client missing ({exc})",
+            additional_route="model",
+        )
+    except (ConnectionError, OSError, ValueError) as exc:
+        log_message(
+            f"{request_label.title()} model failed, using fallback response: {type(exc).__name__}: {exc}",
+            additional_route="model",
+        )
+    except Exception as exc:
         log_message(
             f"{request_label.title()} model failed, using fallback response: {type(exc).__name__}: {exc}",
             additional_route="model",
         )
 
     return parse_response("{}")
+
+
+def _extract_ollama_content(response: object) -> str:
+    if isinstance(response, dict):
+        message = response.get("message")
+        if isinstance(message, dict):
+            content = message.get("content", "")
+            return content if isinstance(content, str) else str(content)
+        content = response.get("response")
+        if isinstance(content, str):
+            return content
+
+    content = getattr(response, "message", None)
+    if isinstance(content, dict):
+        raw_content = content.get("content", "")
+        return raw_content if isinstance(raw_content, str) else str(raw_content)
+
+    raw_response = getattr(response, "response", None)
+    if isinstance(raw_response, str):
+        return raw_response
+
+    return str(response)
