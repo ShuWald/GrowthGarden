@@ -1,48 +1,68 @@
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from .flexlog import log_message, ensure_log_directory
+
+from .flexlog import ensure_log_directory, log_message
+from .metrics import (
+    ensure_metrics_storage,
+    get_frontend_metrics_snapshot,
+    get_recent_prompt_analyses,
+    summarize_prompt_result,
+)
+from .process import PromptProcessor
 
 load_dotenv()
 app = FastAPI()
+processor = PromptProcessor()
 
-# Enable CORS for the extension
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["chrome-extension://*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_origin_regex=r"chrome-extension://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize logging on startup
+
 @app.on_event("startup")
 def startup():
     ensure_log_directory()
+    ensure_metrics_storage()
     log_message("Growth Garden backend started", print_log=True)
 
-# Accept any JSON data from the extension, validate later
+
 @app.post("/api/prompts")
 async def process_prompt(request: Request):
-    # Accept raw JSON without schema validation
     data = await request.json()
-    log_message(f"Received prompt: {data}", print_log=True, additional_route="prompts")
-    
-    # TODO:
-    # - Extract/validate fields as needed (prompt, source, timestamp, etc.)
-    # - Function to trigger the AI model to process prompt 
-    # - Backend stores/processes prompt with its own logic
-    # - Optional, return a score indicator
-    
-    log_message("Finished processing prompt (placeholder)", print_log=True, additional_route="prompts")
+    log_message("Received prompt payload", print_log=True, additional_route="prompts")
 
-    return {
-        "received": data,
-        "response": "Model processing placeholder - add your AI logic here",
-    }
+    try:
+        result = processor.process(data)
+    except ValueError as exc:
+        log_message(f"Invalid prompt payload: {exc}", additional_route="prompts")
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        log_message(
+            f"Unexpected prompt processing failure: {type(exc).__name__}: {exc}",
+            additional_route="prompts",
+        )
+        raise HTTPException(status_code=500, detail="Prompt processing failed") from exc
+
+    log_message("Finished processing prompt", print_log=True, additional_route="prompts")
+    return summarize_prompt_result(result)
 
 
-@app.get("/api/test")
-def get_endpoint():
-    log_message("Received GET request at /api/test", print_log=True, additional_route="test")
-    return {"message": "Default response"}
+@app.get("/api/frontend")
+def frontend_metrics():
+    log_message("Serving frontend metrics snapshot", additional_route="metrics")
+    return get_frontend_metrics_snapshot()
+
+
+@app.get("/api/prompts/recent")
+def recent_prompt_metrics(n: int = Query(default=10, ge=1, lt=25)):
+    log_message(f"Serving recent prompt history for n={n}", additional_route="metrics")
+    return get_recent_prompt_analyses(limit=n)
