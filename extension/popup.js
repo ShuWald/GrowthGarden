@@ -1,12 +1,5 @@
-function isLocalhostAvailable() {
-  return true;
-}
-
 function openSite() {
-  const url = isLocalhostAvailable()
-    ? "http://localhost:3000/metrics"
-    : chrome.runtime.getURL("site.html");
-  chrome.tabs.create({ url });
+  chrome.tabs.create({ url: "http://localhost:3000/metrics" });
 }
 
 async function getDataFromChatbot() {
