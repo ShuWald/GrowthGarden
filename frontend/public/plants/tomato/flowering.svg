@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Tomato flowering stage</title>
+  <desc id="desc">A tomato vine with branching leaves and yellow blossoms.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f7f1e5" />
+      <stop offset="100%" stop-color="#e0e8d6" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="316" cy="80" r="34" fill="#fff0bc" />
+  <ellipse cx="200" cy="312" rx="164" ry="54" fill="#cca57d" />
+  <path d="M36 308c36 16 92 24 164 24s128-8 164-24v60H36Z" fill="#7c5a40" />
+  <g stroke="#59854e" stroke-linecap="round" stroke-width="8">
+    <path d="M200 288c0-58 0-112 3-160" />
+    <path d="M202 216c-24-34-50-58-80-74" />
+    <path d="M204 198c22-36 50-64 84-84" />
+    <path d="M205 232c28-8 52-7 77 1" />
+  </g>
+  <g fill="#76a865">
+    <path d="M198 177c-21-26-51-31-82-15 13 31 47 42 82 15Z" />
+    <path d="M198 220c-28-15-58-12-81 10 20 25 55 28 81-10Z" />
+    <path d="M206 172c18-31 49-39 81-24-10 34-45 48-81 24Z" />
+    <path d="M206 210c24-18 55-20 82-2-18 28-53 36-82 2Z" />
+  </g>
+  <g fill="#f0d45f">
+    <circle cx="168" cy="162" r="10" />
+    <circle cx="258" cy="142" r="10" />
+    <circle cx="280" cy="230" r="10" />
+  </g>
+</svg>

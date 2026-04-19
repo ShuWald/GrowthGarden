@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Tomato fruiting stage</title>
+  <desc id="desc">A tomato vine carrying bright red fruit with green foliage.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f7f0e4" />
+      <stop offset="100%" stop-color="#dee6d5" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="318" cy="80" r="34" fill="#ffefb6" />
+  <ellipse cx="200" cy="312" rx="164" ry="54" fill="#cea67e" />
+  <path d="M36 308c36 16 92 24 164 24s128-8 164-24v60H36Z" fill="#7b5940" />
+  <g stroke="#58834d" stroke-linecap="round" stroke-width="8">
+    <path d="M200 288c0-58 2-116 7-174" />
+    <path d="M206 200c24-44 52-76 84-98" />
+    <path d="M203 220c-24-36-52-64-86-84" />
+    <path d="M206 238c30-14 58-20 89-16" />
+  </g>
+  <g fill="#73a562">
+    <path d="M198 182c-22-30-54-39-87-24 12 36 50 49 87 24Z" />
+    <path d="M199 226c-30-18-61-18-86 3 19 28 57 36 86-3Z" />
+    <path d="M209 172c19-35 51-47 87-34-8 38-45 57-87 34Z" />
+    <path d="M210 212c26-22 59-28 90-12-16 31-54 45-90 12Z" />
+  </g>
+  <g>
+    <circle cx="167" cy="168" r="18" fill="#c85648" />
+    <circle cx="255" cy="148" r="18" fill="#c85648" />
+    <circle cx="282" cy="234" r="18" fill="#c85648" />
+    <path d="M167 148c5 0 9 4 10 9-7 2-13 2-20 0 1-5 5-9 10-9Z" fill="#4b7b45" />
+    <path d="M255 128c5 0 9 4 10 9-7 2-13 2-20 0 1-5 5-9 10-9Z" fill="#4b7b45" />
+    <path d="M282 214c5 0 9 4 10 9-7 2-13 2-20 0 1-5 5-9 10-9Z" fill="#4b7b45" />
+  </g>
+</svg>

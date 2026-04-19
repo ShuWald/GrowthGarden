@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Basil seed stage</title>
+  <desc id="desc">Tiny basil seeds scattered across soft soil in a bright herb garden scene.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8f4e8" />
+      <stop offset="100%" stop-color="#e4ecdc" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="96" cy="80" r="44" fill="#ffffff" fill-opacity="0.35" />
+  <ellipse cx="200" cy="304" rx="164" ry="54" fill="#c5a27a" />
+  <path d="M36 302c36 16 92 24 164 24s128-8 164-24v62H36Z" fill="#7f5c41" />
+  <g fill="#63412d">
+    <ellipse cx="166" cy="265" rx="8" ry="11" transform="rotate(-14 166 265)" />
+    <ellipse cx="196" cy="257" rx="8" ry="11" transform="rotate(18 196 257)" />
+    <ellipse cx="225" cy="267" rx="8" ry="11" transform="rotate(-22 225 267)" />
+  </g>
+</svg>

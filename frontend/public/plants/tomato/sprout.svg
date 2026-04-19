@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Tomato sprout stage</title>
+  <desc id="desc">A tomato sprout with a slim stem and tiny fresh leaves.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8f3e7" />
+      <stop offset="100%" stop-color="#e2eadb" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="308" cy="82" r="34" fill="#fff3c9" />
+  <ellipse cx="200" cy="306" rx="164" ry="54" fill="#caa37b" />
+  <path d="M36 302c36 16 92 24 164 24s128-8 164-24v60H36Z" fill="#7e5c41" />
+  <path d="M200 278c0-36 5-64 16-88" fill="none" stroke="#5b8850" stroke-linecap="round" stroke-width="8" />
+  <path d="M215 218c18-16 39-16 55 1-13 18-36 25-55-1Z" fill="#79a967" />
+  <path d="M212 236c-19-12-39-11-54 5 15 18 37 19 54-5Z" fill="#8fba78" />
+</svg>

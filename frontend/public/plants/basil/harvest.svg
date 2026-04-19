@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Basil harvest stage</title>
+  <desc id="desc">A mature basil plant with layered leaves and several stems.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f7f2e6" />
+      <stop offset="100%" stop-color="#e1ead8" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="310" cy="78" r="36" fill="#fff0bf" />
+  <ellipse cx="200" cy="310" rx="164" ry="54" fill="#cca57d" />
+  <path d="M36 306c36 16 92 24 164 24s128-8 164-24v60H36Z" fill="#7d5b40" />
+  <g stroke="#5e8751" stroke-linecap="round" stroke-width="7">
+    <path d="M200 288c0-52 0-96 0-134" />
+    <path d="M200 236c-16-38-36-66-58-86" />
+    <path d="M200 248c20-36 42-66 68-92" />
+  </g>
+  <g fill="#76a864">
+    <path d="M197 166c-18-28-47-35-77-20 11 30 45 45 77 20Z" />
+    <path d="M197 205c-25-16-55-13-77 7 19 24 54 28 77-7Z" />
+    <path d="M204 166c17-31 48-40 79-24-9 33-44 50-79 24Z" />
+    <path d="M204 206c27-17 58-15 81 7-19 24-56 31-81-7Z" />
+    <path d="M202 137c-15-24-15-48 1-72 24 13 33 40-1 72Z" />
+  </g>
+</svg>

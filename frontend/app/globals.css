@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eef1e5;
+  --foreground: #243127;
+  --surface: #f8f5ec;
+  --surface-strong: #fffdf8;
+  --border: #c5cfbf;
+  --moss: #6c8a62;
+  --sage: #9fb28f;
+  --seed: #8b6847;
+  --clay: #ba8f6f;
+  --highlight: #efe4b5;
+  --shadow: rgba(41, 62, 45, 0.18);
+  --font-body: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua",
+    "URW Palladio L", Georgia, serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-moss: var(--moss);
+  --color-sage: var(--sage);
+  --color-seed: var(--seed);
+  --color-clay: var(--clay);
+  --color-highlight: var(--highlight);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(191, 213, 181, 0.85), transparent 34%),
+    radial-gradient(circle at top right, rgba(239, 228, 181, 0.7), transparent 28%),
+    linear-gradient(180deg, #f6f2e9 0%, #eef1e5 40%, #e6ebdb 100%);
+  color: var(--foreground);
+  font-family: var(--font-body);
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background: rgba(159, 178, 143, 0.35);
+  color: var(--foreground);
+}
+
+a,
+button {
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.garden-card {
+  background: color-mix(in srgb, var(--surface) 92%, white 8%);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, white 12%);
+  box-shadow:
+    0 24px 60px -34px var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.garden-grid {
+  background-image:
+    linear-gradient(rgba(108, 138, 98, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108, 138, 98, 0.05) 1px, transparent 1px);
+  background-position: center;
+  background-size: 18px 18px;
+}

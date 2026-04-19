@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Sunflower bud stage</title>
+  <desc id="desc">A sunflower plant with broad leaves and a developing golden bud.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f7f1e1" />
+      <stop offset="100%" stop-color="#e3ead5" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="318" cy="72" r="34" fill="#fff8d7" />
+  <ellipse cx="200" cy="310" rx="162" ry="52" fill="#cfa883" />
+  <path d="M38 306c34 16 88 24 162 24s128-8 162-24v58H38Z" fill="#845f43" />
+  <path d="M200 290c0-54 10-106 28-154" fill="none" stroke="#5f8b4f" stroke-linecap="round" stroke-width="10" />
+  <path d="M219 188c33-28 69-33 102-10-21 31-64 39-102 10Z" fill="#7baa66" />
+  <path d="M218 228c-39-25-79-24-108 3 24 27 70 34 108-3Z" fill="#92bc77" />
+  <path d="M231 132c12-13 33-15 49-4 0 19-17 34-36 34-12 0-18-14-13-30Z" fill="#c2a53b" />
+  <circle cx="236" cy="141" r="18" fill="#7ea954" />
+</svg>

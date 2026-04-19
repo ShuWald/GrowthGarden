@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Tomato leafing stage</title>
+  <desc id="desc">A leafy tomato plant with branching stems and broad green growth.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8f2e6" />
+      <stop offset="100%" stop-color="#e1e9d7" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="314" cy="82" r="34" fill="#fff0bf" />
+  <ellipse cx="200" cy="310" rx="164" ry="54" fill="#cca57d" />
+  <path d="M36 306c36 16 92 24 164 24s128-8 164-24v60H36Z" fill="#7d5b40" />
+  <g stroke="#5c8650" stroke-linecap="round" stroke-width="8">
+    <path d="M200 286c0-54 0-102 2-146" />
+    <path d="M201 226c-25-32-50-53-76-66" />
+    <path d="M202 214c22-34 50-58 82-74" />
+  </g>
+  <g fill="#78a867">
+    <path d="M197 183c-21-23-50-25-78-8 15 27 46 36 78 8Z" />
+    <path d="M197 222c-26-14-54-12-76 8 20 22 52 26 76-8Z" />
+    <path d="M205 178c18-28 48-34 78-17-11 30-43 41-78 17Z" />
+    <path d="M205 216c23-18 53-19 79 0-17 25-51 33-79 0Z" />
+  </g>
+</svg>

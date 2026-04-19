@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Sunflower bloom stage</title>
+  <desc id="desc">A fully opened sunflower with bright petals and sturdy leaves.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f9f1df" />
+      <stop offset="100%" stop-color="#e4ead6" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="312" cy="78" r="36" fill="#fff2ba" />
+  <ellipse cx="200" cy="312" rx="162" ry="52" fill="#d0a782" />
+  <path d="M38 308c34 16 88 24 162 24s128-8 162-24v58H38Z" fill="#805d42" />
+  <path d="M200 292c0-56 16-116 40-182" fill="none" stroke="#5b884d" stroke-linecap="round" stroke-width="10" />
+  <path d="M232 204c34-28 70-34 102-12-21 32-64 42-102 12Z" fill="#74a861" />
+  <path d="M226 248c-40-28-81-29-111-3 26 30 72 39 111 3Z" fill="#92bc77" />
+  <g transform="translate(244 110)">
+    <circle cx="0" cy="0" r="28" fill="#694828" />
+    <g fill="#e0ab2d">
+      <ellipse cx="0" cy="-50" rx="12" ry="34" />
+      <ellipse cx="35" cy="-35" rx="12" ry="34" transform="rotate(45 35 -35)" />
+      <ellipse cx="50" cy="0" rx="12" ry="34" transform="rotate(90 50 0)" />
+      <ellipse cx="35" cy="35" rx="12" ry="34" transform="rotate(135 35 35)" />
+      <ellipse cx="0" cy="50" rx="12" ry="34" />
+      <ellipse cx="-35" cy="35" rx="12" ry="34" transform="rotate(45 -35 35)" />
+      <ellipse cx="-50" cy="0" rx="12" ry="34" transform="rotate(90 -50 0)" />
+      <ellipse cx="-35" cy="-35" rx="12" ry="34" transform="rotate(135 -35 -35)" />
+    </g>
+  </g>
+</svg>

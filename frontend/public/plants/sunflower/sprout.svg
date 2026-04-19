@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Sunflower sprout stage</title>
+  <desc id="desc">A young sunflower sprout with two leaves emerging from warm soil.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f9f4e6" />
+      <stop offset="100%" stop-color="#e5eddc" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="85" cy="84" r="42" fill="#ffffff" fill-opacity="0.35" />
+  <ellipse cx="200" cy="304" rx="162" ry="56" fill="#cca27a" />
+  <path d="M38 300c40 18 88 28 162 28s122-10 162-28v60H38Z" fill="#866044" />
+  <path d="M200 270c0-34 5-63 14-86" fill="none" stroke="#5b8b55" stroke-linecap="round" stroke-width="8" />
+  <path d="M216 205c24-21 54-21 76-4-18 24-50 31-76 4Z" fill="#78a766" />
+  <path d="M212 224c-29-18-61-13-82 9 21 19 56 18 82-9Z" fill="#90b879" />
+  <ellipse cx="198" cy="266" rx="10" ry="18" fill="#6c492f" />
+</svg>

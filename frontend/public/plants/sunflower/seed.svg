@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Sunflower seed stage</title>
+  <desc id="desc">A single sunflower seed nestled in soil with a soft garden background.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8f2df" />
+      <stop offset="100%" stop-color="#e7eddc" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <circle cx="92" cy="78" r="40" fill="#ffffff" fill-opacity="0.35" />
+  <ellipse cx="200" cy="300" rx="160" ry="58" fill="#c59b74" />
+  <path d="M40 298c40 18 88 27 160 27s120-9 160-27v62H40Z" fill="#876144" />
+  <ellipse cx="200" cy="266" rx="18" ry="28" transform="rotate(-18 200 266)" fill="#5c3c28" />
+  <path d="M191 245c11 7 17 18 16 33" fill="none" stroke="#9f7b58" stroke-linecap="round" stroke-width="4" />
+</svg>
